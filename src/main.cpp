@@ -3216,10 +3216,17 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool f
         return state.DoS(50, error("CheckBlockHeader(): proof of work failed"),
                          REJECT_INVALID, "high-hash");
 
-    // Check timestamp
-    if (block.GetBlockTime() > GetAdjustedTime() + 2 * 60 * 60)
-        return state.Invalid(error("CheckBlockHeader(): block timestamp too far in the future"),
-                             REJECT_INVALID, "time-too-new");
+    // Check timestamp (activation by block time: 15 min if nTime >= activation else 2 h; no codepath unexamined)
+    int64_t nTime = block.GetBlockTime();
+    if (nTime >= ACTIVATE_MAX_FUTURE_BLOCK_TIME_15MIN) {
+        if (nTime > GetAdjustedTime() + MAX_FUTURE_BLOCK_TIME)
+            return state.Invalid(error("CheckBlockHeader(): block timestamp too far in the future"),
+                                 REJECT_INVALID, "time-too-new");
+    } else {
+        if (nTime > GetAdjustedTime() + MAX_FUTURE_BLOCK_TIME_LEGACY)
+            return state.Invalid(error("CheckBlockHeader(): block timestamp too far in the future"),
+                                 REJECT_INVALID, "time-too-new");
+    }
 
     return true;
 }
