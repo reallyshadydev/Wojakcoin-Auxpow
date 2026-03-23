@@ -80,6 +80,7 @@ endif
 # bitcoin core #
 BITCOIN_CORE_H = \
   addrman.h \
+  auxpow.h \
   alert.h \
   amount.h \
   arith_uint256.h \
@@ -126,6 +127,7 @@ BITCOIN_CORE_H = \
   pow.h \
   prevector.h \
   primitives/block.h \
+  primitives/pureheader.h \
   primitives/transaction.h \
   protocol.h \
   pubkey.h \
@@ -267,6 +269,7 @@ crypto_libbitcoin_crypto_a_SOURCES = \
 libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
+  auxpow.cpp \
   amount.cpp \
   arith_uint256.cpp \
   base58.cpp \
@@ -281,6 +284,7 @@ libbitcoin_common_a_SOURCES = \
   keystore.cpp \
   netbase.cpp \
   primitives/block.cpp \
+  primitives/pureheader.cpp \
   primitives/transaction.cpp \
   protocol.cpp \
   pubkey.cpp \

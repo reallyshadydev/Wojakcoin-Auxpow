@@ -6,6 +6,7 @@
 #include "pow.h"
 
 #include "arith_uint256.h"
+#include "auxpow.h"
 #include "chain.h"
 #include "primitives/block.h"
 #include "uint256.h"
@@ -156,6 +157,24 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
     LogPrintf("After:  %08x  %s\n", bnNew.GetCompact(), bnNew.ToString());
 
     return bnNew.GetCompact();
+}
+
+bool CheckBlockHeaderProofOfWork(const CBlockHeader& block, const Consensus::Params& params, int nHeight)
+{
+    if (block.IsAuxpow()) {
+        if (!block.auxpow)
+            return error("CheckBlockHeaderProofOfWork(): auxpow flag set but auxpow missing");
+        if (params.nAuxpowStartHeight >= 0 && nHeight >= 0 && nHeight < params.nAuxpowStartHeight)
+            return error("CheckBlockHeaderProofOfWork(): unexpected auxpow before fork height");
+        if (!block.auxpow->check(block.GetHash(), params.nAuxpowChainId, params))
+            return false;
+        return CheckProofOfWork(block.auxpow->getParentBlockPoWHash(), block.auxpow->parentBlock.nBits, params);
+    }
+
+    if (params.nAuxpowStartHeight >= 0 && nHeight >= params.nAuxpowStartHeight)
+        return error("CheckBlockHeaderProofOfWork(): auxpow required at this height");
+
+    return CheckProofOfWork(block.GetHash(), block.nBits, params);
 }
 
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)

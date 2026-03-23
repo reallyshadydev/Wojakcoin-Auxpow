@@ -15,6 +15,9 @@ class CBlockIndex;
 class uint256;
 class arith_uint256;
 
+/** Proof-of-work check for a block header (standard or merge-mined auxpow). */
+bool CheckBlockHeaderProofOfWork(const CBlockHeader& block, const Consensus::Params& params, int nHeight);
+
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&);
 unsigned int GetNextWorkRequiredV2(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&);
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params&);

@@ -5,6 +5,7 @@
 
 #include "primitives/block.h"
 
+#include "auxpow.h"
 #include "hash.h"
 #include "tinyformat.h"
 #include "utilstrencodings.h"
@@ -12,7 +13,13 @@
 
 uint256 CBlockHeader::GetHash() const
 {
-    return SerializeHash(*this);
+    return SerializeHash(static_cast<const CPureBlockHeader&>(*this));
+}
+
+void CBlockHeader::SetAuxpow(std::shared_ptr<CAuxPow> apow)
+{
+    auxpow = apow;
+    SetAuxpowFlag(static_cast<bool>(auxpow));
 }
 
 std::string CBlock::ToString() const
