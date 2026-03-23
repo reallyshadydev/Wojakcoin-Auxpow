@@ -3556,7 +3556,7 @@ bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams,
     // NOTE: CheckBlockHeader is called by CheckBlock
     if (!ContextualCheckBlockHeader(block, state, pindexPrev))
         return false;
-    if (!CheckBlock(block, state, fCheckPOW, fCheckMerkleRoot))
+    if (!CheckBlock(block, state, fCheckPOW, fCheckMerkleRoot, pindexPrev))
         return false;
     if (!ContextualCheckBlock(block, state, pindexPrev))
         return false;
