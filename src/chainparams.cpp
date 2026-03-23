@@ -65,6 +65,9 @@ public:
         consensus.nPowTargetTimespan = 6 * 60;  // WojakCoin: 6 minutes
         consensus.nPowTargetSpacing = 2 * 60;   // WojakCoin: 2 minute blocks
         consensus.nDifficultyV2ForkHeight = 1000;  // Switch to V2 at block 1000
+        consensus.nAuxpowStartHeight = 80000;
+        consensus.nAuxpowChainId = 0x0527;  // distinct merge-mining chain id
+        consensus.fStrictChainId = true;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1916;
@@ -144,6 +147,9 @@ public:
         consensus.nPowTargetTimespan = 6 * 60;
         consensus.nPowTargetSpacing = 2 * 60;
         consensus.nDifficultyV2ForkHeight = 1000;
+        consensus.nAuxpowStartHeight = 80000;
+        consensus.nAuxpowChainId = 0x0527;
+        consensus.fStrictChainId = true;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1512;
@@ -213,6 +219,9 @@ public:
         consensus.nPowTargetTimespan = 6 * 60;
         consensus.nPowTargetSpacing = 2 * 60;
         consensus.nDifficultyV2ForkHeight = 0;
+        consensus.nAuxpowStartHeight = -1;
+        consensus.nAuxpowChainId = 0x0527;
+        consensus.fStrictChainId = true;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
         consensus.nRuleChangeActivationThreshold = 108;

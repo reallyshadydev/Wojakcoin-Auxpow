@@ -6,6 +6,7 @@
 #include "miner.h"
 
 #include "amount.h"
+#include "auxpow.h"
 #include "chain.h"
 #include "chainparams.h"
 #include "coins.h"
@@ -67,6 +68,11 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
     // Updating time can change work required on testnet:
     if (consensusParams.fPowAllowMinDifficultyBlocks)
         pblock->nBits = GetNextWorkRequired(pindexPrev, pblock, consensusParams);
+
+    if (pblock->IsAuxpow() && pblock->auxpow) {
+        pblock->auxpow->parentBlock.nTime = pblock->nTime;
+        pblock->auxpow->parentBlock.nBits = pblock->nBits;
+    }
 
     return nNewTime - nOldTime;
 }
@@ -287,6 +293,19 @@ CBlockTemplate* CreateNewBlock(const CChainParams& chainparams, const CScript& s
         UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
         pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
         pblock->nNonce         = 0;
+
+        const Consensus::Params& consensus = chainparams.GetConsensus();
+        if (consensus.nAuxpowStartHeight >= 0 && nHeight >= consensus.nAuxpowStartHeight) {
+            int32_t baseVer = CPureBlockHeader::GetBaseVersion(pblock->nVersion);
+            if (baseVer < 1)
+                baseVer = 4;
+            pblock->SetBaseVersion(baseVer, consensus.nAuxpowChainId);
+            pblock->SetAuxpowFlag(true);
+            CAuxPow::initAuxPow(*pblock);
+            pblock->auxpow->parentBlock.nBits = pblock->nBits;
+            pblock->auxpow->parentBlock.nTime = pblock->nTime;
+        }
+
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
 
         CValidationState state;
@@ -315,6 +334,7 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
 
     pblock->vtx[0] = txCoinbase;
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
+    CAuxPow::updateMergedMiningHeader(*pblock);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -330,10 +350,14 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
 //
 bool static ScanHash(const CBlockHeader *pblock, uint32_t& nNonce, uint256 *phash)
 {
-    // Write the first 76 bytes of the block header to a double-SHA256 state.
+    // Write the first 76 bytes of the header we are hashing (auxpow: parent header).
     CHash256 hasher;
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
-    ss << *pblock;
+    if (pblock->IsAuxpow() && pblock->auxpow) {
+        CPureBlockHeader parent = pblock->auxpow->parentBlock;
+        ss << parent;
+    } else
+        ss << *pblock;
     assert(ss.size() == 80);
     hasher.Write((unsigned char*)&ss[0], 76);
 
@@ -444,8 +468,12 @@ void static BitcoinMiner(const CChainParams& chainparams)
                     if (UintToArith256(hash) <= hashTarget)
                     {
                         // Found a solution
-                        pblock->nNonce = nNonce;
-                        assert(hash == pblock->GetHash());
+                        if (pblock->IsAuxpow() && pblock->auxpow) {
+                            pblock->auxpow->parentBlock.nNonce = nNonce;
+                        } else
+                            pblock->nNonce = nNonce;
+                        assert(hash == pblock->GetHash() || (pblock->IsAuxpow() && pblock->auxpow &&
+                            hash == pblock->auxpow->getParentBlockPoWHash()));
 
                         SetThreadPriority(THREAD_PRIORITY_NORMAL);
                         LogPrintf("BitcoinMiner:\n");

@@ -59,6 +59,12 @@ struct Params {
     int64_t nPowTargetSpacing;
     int64_t nPowTargetTimespan;
     int nDifficultyV2ForkHeight;  // Height at which to switch to V2 difficulty algorithm
+    /** Merge-mining (auxpow): disabled when < 0. */
+    int nAuxpowStartHeight;
+    /** Chain ID encoded in block version bits 16-31 for merge-mined blocks. */
+    int32_t nAuxpowChainId;
+    /** Reject auxpow parent blocks that use the same chain ID (prevents self-merge). */
+    bool fStrictChainId;
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
 };
 } // namespace Consensus

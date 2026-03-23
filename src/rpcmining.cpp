@@ -165,7 +165,9 @@ UniValue generate(const UniValue& params, bool fHelp)
             LOCK(cs_main);
             IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
         }
-        while (!CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
+        CBlockIndex* pindexPrevGen = chainActive.Tip();
+        while (!CheckBlockHeaderProofOfWork(*pblock, Params().GetConsensus(),
+                pindexPrevGen ? pindexPrevGen->nHeight + 1 : -1)) {
             // Yes, there is a chance every nonce could fail to satisfy the -regtest
             // target -- 1 in 2^(2^32). That ain't gonna happen.
             ++pblock->nNonce;
